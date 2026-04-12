@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { useTenant } from "@/hooks/use-tenant";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -26,6 +27,7 @@ export function SignUpForm({
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { qualifyTenant } = useTenant();
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,10 +46,14 @@ export function SignUpForm({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/protected`,
+          emailRedirectTo: `${window.location.origin}/(dashboard)/protected`,
         },
       });
       if (error) throw error;
+      
+      // Qualify the tenant from email
+      qualifyTenant(email);
+      
       router.push("/auth/sign-up-success");
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");

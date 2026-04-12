@@ -6,14 +6,25 @@ import { FetchDataSteps } from "@/components/tutorial/fetch-data-steps";
 import { Suspense } from "react";
 
 async function UserDetails() {
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.getClaims();
-
-  if (error || !data?.claims) {
-    redirect("/auth/login");
+  // During build time, Supabase env vars may not be available
+  // In that case, return a placeholder message
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    return "User details will appear here when authenticated";
   }
+  
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase.auth.getClaims();
 
-  return JSON.stringify(data.claims, null, 2);
+    if (error || !data?.claims) {
+      redirect("/auth/login");
+    }
+
+    return JSON.stringify(data.claims, null, 2);
+  } catch (error) {
+    // If we can't connect to Supabase (e.g., during build), return placeholder
+    return "User details will appear here when authenticated";
+  }
 }
 
 export default function ProtectedPage() {
